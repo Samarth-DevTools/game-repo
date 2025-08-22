@@ -44,10 +44,11 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'sonarcloud-token', variable: 'SONAR_TOKEN')]) {
                     sh '''
-                    mvn sonar:sonar \
-                    -Dsonar.token=$SONAR_TOKEN \
+                    sonar-scanner \
                     -Dsonar.projectKey=game-app_ga-1 \
                     -Dsonar.organization=game-app \
+                    -Dsonar.token=$SONAR_TOKEN \
+                    -Dsonar.sources=. \
                     -Dsonar.host.url=https://sonarcloud.io
                     '''
                 }
