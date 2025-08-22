@@ -113,22 +113,43 @@ pipeline {
             }
         }
 
-
-        stage('Trigger ArgoCD Sync') {
+        stage('Configure kubectl') {
             steps {
-                script {
-                    // Adjust this to your actual ArgoCD sync job or API call
-                    build job: 'argo-sync-job', wait: false
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'aws-creds-id'
+                ]]) {
+                    sh """
+                        aws eks --region ${AWS_REGION} update-kubeconfig --name ${CLUSTER_NAME} --kubeconfig ${KUBECONFIG}
+                    """
                 }
             }
         }
+
+
+        stage('Deploy to EKS') {
+            steps {
+                script {
+                    try {
+                        sh """
+                            kubectl --kubeconfig=${KUBECONFIG} apply -f k8s/deployment.yaml
+                            kubectl --kubeconfig=${KUBECONFIG} apply -f k8s/service.yaml
+                        """
+                    } catch (err) {
+                        createGitHubIssue('Kubernetes Deploy Failed', err.toString())
+                        error("Failed to deploy to Kubernetes")
+                    }
+                }
+            }
+        }
+
     }
 
     post {
         success {
             script {
                 notifyTeams("Build #${env.BUILD_NUMBER} succeeded")
-                mail to: 'team@example.com',
+                mail to: 'srikanths@devtools.in',
                      subject: "Build Success #${env.BUILD_NUMBER}",
                      body: "Pipeline completed successfully."
             }
@@ -136,7 +157,7 @@ pipeline {
         failure {
             script {
                 notifyTeams("Build #${env.BUILD_NUMBER} failed")
-                mail to: 'team@example.com',
+                mail to: 'srikanths@devtools.in',
                      subject: "Build Failed #${env.BUILD_NUMBER}",
                      body: "Pipeline failed. Check Jenkins for details."
             }

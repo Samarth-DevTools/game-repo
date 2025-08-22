@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tetris-app
+  labels:
+    app: tetris-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: tetris-app
+  template:
+    metadata:
+      labels:
+        app: tetris-app
+    spec:
+      containers:
+        - name: tetris-app
+          image: 807860707312.dkr.ecr.us-east-1.amazonaws.com/register-app-repo:latest  # Change if needed
+          ports:
+            - containerPort: 3000
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          env:
+            - name: NODE_ENV
+              value: "production"
