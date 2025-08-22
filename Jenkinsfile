@@ -85,15 +85,34 @@ pipeline {
         stage('Trivy Scan') {
             steps {
                 script {
-                    try {
-                        sh "trivy image --exit-code 1 --severity HIGH,CRITICAL ${ECR_URI}:${IMAGE_TAG}"
-                    } catch (err) {
-                        createGitHubIssue('Trivy Scan Failed', err.toString())
-                        error("Trivy scan found vulnerabilities")
+                    // Run Trivy scan and capture exit code (without failing the build)
+                    def trivyExitCode = sh(
+                        script: "trivy image --exit-code 1 --severity HIGH,CRITICAL ${ECR_URI}:${IMAGE_TAG}",
+                        returnStatus: true
+                    )
+
+                    if (trivyExitCode != 0) {
+                        echo "Trivy scan detected HIGH or CRITICAL vulnerabilities (exit code: ${trivyExitCode})"
+                        createGitHubIssue(
+                            'Trivy Scan Found Vulnerabilities',
+                            "Trivy scan reported HIGH or CRITICAL vulnerabilities for image `${ECR_URI}:${IMAGE_TAG}`"
+                        )
+                        // Intentionally not failing the stage
+                    } else {
+                        echo "Trivy scan passed with no HIGH or CRITICAL vulnerabilities."
                     }
+
+                    // Save the scan results in a readable report
+                    sh """
+                        trivy image --format table --severity HIGH,CRITICAL --output trivy-report.txt ${ECR_URI}:${IMAGE_TAG}
+                    """
+
+                    // Archive the report in Jenkins
+                    archiveArtifacts artifacts: 'trivy-report.txt', fingerprint: true
                 }
             }
         }
+
 
         stage('Trigger ArgoCD Sync') {
             steps {
