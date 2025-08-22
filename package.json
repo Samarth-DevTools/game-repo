@@ -9,5 +9,11 @@
     "scripts": {
         "test": "jest",
         "coverage": "nyc --reporter=lcov --reporter=text npm test"
+    },
+    "nyc": {
+        "include": ["src/**/*.js"],
+        "exclude": ["**/__tests__/**", "node_modules"],
+        "reporter": ["lcov", "text"],
+        "all": true
     }
 }
