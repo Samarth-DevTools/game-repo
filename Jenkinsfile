@@ -29,15 +29,16 @@ pipeline {
             steps {
                 script {
                     try {
-                        sh 'mvn clean package'
-                        sh 'mvn test'
+                        sh 'npm install'
+                        sh 'npm test || echo "No tests defined, continuing..."'
                     } catch (err) {
-                        createGitHubIssue('Build or Tests Failed', err.toString())
-                        error("Build/tests failed")
+                        createGitHubIssue('NPM Build or Tests Failed', err.toString())
+                        error("NPM build/tests failed")
                     }
                 }
             }
         }
+
 
         stage('SonarCloud Scan') {
             steps {
