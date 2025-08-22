@@ -12,10 +12,13 @@ pipeline {
         IMAGE_TAG = "${env.BUILD_NUMBER ?: 'latest'}"
         ECR_URI = "807860707312.dkr.ecr.us-east-1.amazonaws.com/register-app-repo"
 
-        GITHUB_REPO = 'Samarth-DevTools/game-repo'  // Your personal repo
+        GITHUB_REPO = 'Samarth-DevTools/game-repo'  
         GITHUB_TOKEN = credentials('github-token')
         SONAR_TOKEN = credentials('sonarcloud-token')
         SONARQUBE_SERVER = 'SonarQube'
+
+        CLUSTER_NAME = 'register-app-eks-cluster'           
+        KUBECONFIG = "${env.WORKSPACE}/kubeconfig"
     }
 
     stages {
