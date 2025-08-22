@@ -19,6 +19,9 @@ pipeline {
 
         CLUSTER_NAME = 'register-app-eks-cluster'           
         KUBECONFIG = "${env.WORKSPACE}/kubeconfig"
+
+        AWS_ACCESS_KEY_ID = credentials('aws-access-key-id')
+        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')
     }
 
     stages {
@@ -54,6 +57,30 @@ pipeline {
                     -Dsonar.sources=. \
                     -Dsonar.host.url=https://sonarcloud.io
                     '''
+                }
+            }
+        }
+
+
+        stage('Code Coverage') {
+            steps {
+                script {
+                    try {
+                        sh 'npm run coverage'
+
+                        // Archive the coverage report
+                        archiveArtifacts artifacts: 'coverage/**', fingerprint: true
+
+                        // Publish coverage report in Jenkins (if using Cobertura plugin)
+                        publishHTML(target: [
+                            reportDir: 'coverage/lcov-report',
+                            reportFiles: 'index.html',
+                            reportName: 'Code Coverage'
+                        ])
+                    } catch (err) {
+                        createGitHubIssue('Code Coverage Failed', err.toString())
+                        echo "Code coverage failed, but continuing pipeline"
+                    }
                 }
             }
         }
@@ -132,20 +159,30 @@ pipeline {
 
         stage('Deploy to EKS') {
             steps {
-                script {
-                    try {
-                        sh """
-                            kubectl --kubeconfig=${KUBECONFIG} apply -f k8s/deployment.yaml
-                            kubectl --kubeconfig=${KUBECONFIG} apply -f k8s/service.yaml
-                        """
-                    } catch (err) {
-                        createGitHubIssue('Kubernetes Deploy Failed', err.toString())
-                        error("Failed to deploy to Kubernetes")
+                withCredentials([
+                    [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds-id']
+                ]) {
+                    script {
+                        try {
+                            // Validate cluster connection (optional but helpful)
+                            sh "kubectl --kubeconfig=${KUBECONFIG} get nodes"
+
+                            // Deploy application manifests
+                            sh """
+                                kubectl --kubeconfig=${KUBECONFIG} apply -f k8s/deployment.yaml
+                                kubectl --kubeconfig=${KUBECONFIG} apply -f k8s/service.yaml
+                            """
+
+                            // Optionally verify deployment status
+                            sh "kubectl --kubeconfig=${KUBECONFIG} rollout status deployment/tetris-app"
+                        } catch (err) {
+                            createGitHubIssue('Kubernetes Deploy Failed', err.toString())
+                            error("❌ Failed to deploy to Kubernetes: ${err}")
+                        }
                     }
                 }
             }
         }
-
     }
 
     post {
