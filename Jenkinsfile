@@ -177,7 +177,7 @@ pipeline {
                             sh "kubectl --kubeconfig=${KUBECONFIG} rollout status deployment/tetris-app"
                         } catch (err) {
                             createGitHubIssue('Kubernetes Deploy Failed', err.toString())
-                            error("❌ Failed to deploy to Kubernetes: ${err}")
+                            error("Failed to deploy to Kubernetes: ${err}")
                         }
                     }
                 }
