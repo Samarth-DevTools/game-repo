@@ -55,13 +55,6 @@ pipeline {
             }
         }
 
-        stage('Check Node Version') {
-            steps {
-                sh 'node -v'
-                sh 'npm -v'
-            }
-        }
-
 
         stage('SonarCloud Scan') {
             steps {
