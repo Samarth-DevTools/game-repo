@@ -3,6 +3,7 @@ pipeline {
 
     tools {
         maven 'Maven3'
+        nodejs 'Node20'
     }
 
     environment {
@@ -31,6 +32,15 @@ pipeline {
             }
         }
 
+        
+        stage('Check Node Version') {
+            steps {
+                sh 'node -v'
+                sh 'npm -v'
+            }
+        }
+
+
         stage('Build & Test') {
             steps {
                 script {
@@ -42,6 +52,13 @@ pipeline {
                         error("NPM build/tests failed")
                     }
                 }
+            }
+        }
+
+        stage('Check Node Version') {
+            steps {
+                sh 'node -v'
+                sh 'npm -v'
             }
         }
 
