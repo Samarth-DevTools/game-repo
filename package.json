@@ -13,17 +13,9 @@
         "coverage": "nyc --reporter=lcov --reporter=text npm test"
     },
     "nyc": {
-        "include": [
-            "src/**/*.js"
-        ],
-        "exclude": [
-            "**/__tests__/**",
-            "node_modules"
-        ],
-        "reporter": [
-            "lcov",
-            "text"
-        ],
-        "all": true
+        "all": true,
+        "include": ["src/tetris.js"],
+        "reporter": ["text", "lcov"],
+        "exclude": ["tests", "node_modules"]
     }
-}
+}      
