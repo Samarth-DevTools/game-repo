@@ -3,17 +3,27 @@
     "version": "0.5.5",
     "description": "Simple html5 canvas tetris game",
     "devDependencies": {
+        "http-server": "^14.1.1",
         "jest": "^30.0.5",
         "nyc": "^17.1.0"
     },
     "scripts": {
         "test": "jest",
+        "start": "http-server",
         "coverage": "nyc --reporter=lcov --reporter=text npm test"
     },
     "nyc": {
-        "include": ["src/**/*.js"],
-        "exclude": ["**/__tests__/**", "node_modules"],
-        "reporter": ["lcov", "text"],
+        "include": [
+            "src/**/*.js"
+        ],
+        "exclude": [
+            "**/__tests__/**",
+            "node_modules"
+        ],
+        "reporter": [
+            "lcov",
+            "text"
+        ],
         "all": true
     }
 }
